@@ -1,11 +1,12 @@
 const express = require('express');
-const MedicationController = require('../controllers/medicationController');
-
 const router = express.Router();
+const MedicationController = require('../controllers/medicationController');
+const upload = require('../middleware/upload');
 
-router.post('/add-medication', MedicationController.addMedication);
+// POST with image
+router.post('/add-medication', upload.single('image'), MedicationController.addMedication);
+router.put('/update-medication/:id', upload.single('image'), MedicationController.updateMedication);
 router.get('/get-medications', MedicationController.getMedications);
 router.delete('/delete-medication/:id', MedicationController.deleteMedication);
-router.put('/update-medication/:id', MedicationController.updateMedication);
 
 module.exports = router;

@@ -1,10 +1,43 @@
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 const MedicationModel = require('../models/medicationModel');
 
+// Ensure upload directory exists
+const uploadDir = path.join(__dirname, '../uploads/medications');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Set up storage for image uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);  // Folder to save uploaded images
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));  // Unique filename
+  }
+});
+
+const upload = multer({ storage: storage });
+
+// MedicationController
 const MedicationController = {
   addMedication: async (req, res) => {
     try {
-      const medication = await MedicationModel.addMedication(req.body);
-      res.status(201).json({ message: 'Medication added successfully', medication });
+      // Handle image upload
+      upload.single('image')(req, res, async (err) => {
+        if (err) {
+          return res.status(400).json({ message: 'Error uploading image', error: err });
+        }
+
+        // Add image URL to the request body (if image is uploaded)
+        const imageUrl = req.file ? `/uploads/medications/${req.file.filename}` : null;
+        const medicationData = { ...req.body, image_url: imageUrl };
+
+        const medication = await MedicationModel.addMedication(medicationData);
+        res.status(201).json({ message: 'Medication added successfully', medication });
+      });
     } catch (err) {
       console.error('Error inserting medication:', err);
       res.status(500).json({ message: 'Internal server error' });
@@ -12,6 +45,7 @@ const MedicationController = {
   },
 
   getMedications: async (req, res) => {
+    console.log('Fetching all medications...');
     try {
       const medications = await MedicationModel.getAllMedications();
       res.status(200).json({ medications });
@@ -35,10 +69,19 @@ const MedicationController = {
 
   updateMedication: async (req, res) => {
     try {
-      const updatedMedication = await MedicationModel.updateMedication(req.params.id, req.body);
-      if (!updatedMedication) return res.status(404).json({ message: 'Medication not found' });
+      upload.single('image')(req, res, async (err) => {
+        if (err) {
+          return res.status(400).json({ message: 'Error uploading image', error: err });
+        }
 
-      res.status(200).json({ message: 'Medication updated successfully', medication: updatedMedication });
+        const imageUrl = req.file ? `/uploads/medications/${req.file.filename}` : null;
+        const medicationData = { ...req.body, image_url: imageUrl };
+
+        const updatedMedication = await MedicationModel.updateMedication(req.params.id, medicationData);
+        if (!updatedMedication) return res.status(404).json({ message: 'Medication not found' });
+
+        res.status(200).json({ message: 'Medication updated successfully', medication: updatedMedication });
+      });
     } catch (error) {
       console.error('Error updating medication:', error);
       res.status(500).json({ message: 'Failed to update medication' });
