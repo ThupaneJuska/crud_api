@@ -1,4 +1,4 @@
-const allowedOrigins = ['http://localhost:4200'];
+const allowedOrigins = ['http://localhost:4200','http://localhost:50481'];
 
 const corsOptions = {
   origin: (origin, callback) => {
