@@ -15,6 +15,10 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(cors(corsOptions));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use((req, res, next) => {
+  res.setHeader('ngrok-skip-browser-warning', 'true');
+  next();
+});
 
 // Routes
 app.use('/api/medications', medicationRoutes);
