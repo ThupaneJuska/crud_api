@@ -1,11 +1,10 @@
-// patientController.js
 const db = require('../config/db');
 
 // Get all patients
 exports.getAllPatients = async (req, res) => {
   try {
     const result = await db.query('SELECT * FROM Patient');
-    res.status(200).json(result.rows);
+    res.json(result.rows);
   } catch (error) {
     console.error('Error fetching patients:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -22,34 +21,30 @@ exports.addPatient = async (req, res) => {
 
   try {
     const result = await db.query(
-      `
-      INSERT INTO Patient (name, age, gender, contact)
-      VALUES ($1, $2, $3, $4)
-      RETURNING *
-      `,
+      `INSERT INTO Patient (name, age, gender, contact)
+       VALUES ($1, $2, $3, $4)
+       RETURNING *`,
       [name, age, gender, contact]
     );
 
     res.status(201).json(result.rows[0]);
   } catch (error) {
-    console.error('Error adding patient:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.error('🔥 Error adding patient:', error); // Show detailed DB error
+    res.status(500).json({ error: error.message }); // Respond with actual message
   }
 };
 
-// Update patient details
+// Update a patient
 exports.updatePatient = async (req, res) => {
   const { id } = req.params;
   const { name, age, gender, contact } = req.body;
 
   try {
     const result = await db.query(
-      `
-      UPDATE Patient 
-      SET name = $1, age = $2, gender = $3, contact = $4 
-      WHERE patient_id = $5 
-      RETURNING *
-      `,
+      `UPDATE Patient 
+       SET name = $1, age = $2, gender = $3, contact = $4 
+       WHERE patient_id = $5 
+       RETURNING *`,
       [name, age, gender, contact, id]
     );
 
@@ -59,7 +54,7 @@ exports.updatePatient = async (req, res) => {
 
     res.status(200).json(result.rows[0]);
   } catch (error) {
-    console.error('Error updating patient:', error);
+    console.error('Error updating patient:', error.message);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
