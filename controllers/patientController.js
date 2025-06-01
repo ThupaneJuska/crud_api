@@ -1,27 +1,55 @@
 // patientController.js
 const db = require('../config/db');
 
-// Fetch all patients
+// Get all patients
 exports.getAllPatients = async (req, res) => {
   try {
     const result = await db.query('SELECT * FROM Patient');
-    res.json(result.rows);
+    res.status(200).json(result.rows);
   } catch (error) {
     console.error('Error fetching patients:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
 
+// Add a new patient
+exports.addPatient = async (req, res) => {
+  const { name, age, gender, contact } = req.body;
+
+  if (!name || !age || !gender || !contact) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  try {
+    const result = await db.query(
+      `
+      INSERT INTO Patient (name, age, gender, contact)
+      VALUES ($1, $2, $3, $4)
+      RETURNING *
+      `,
+      [name, age, gender, contact]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error adding patient:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+// Update patient details
 exports.updatePatient = async (req, res) => {
-  const { id } = req.params; // 👈 use `id` because your route is /patients/:id
+  const { id } = req.params;
   const { name, age, gender, contact } = req.body;
 
   try {
     const result = await db.query(
-      `UPDATE Patient 
-       SET name = $1, age = $2, gender = $3, contact = $4 
-       WHERE patient_id = $5 
-       RETURNING *`, // 👈 match your column name
+      `
+      UPDATE Patient 
+      SET name = $1, age = $2, gender = $3, contact = $4 
+      WHERE patient_id = $5 
+      RETURNING *
+      `,
       [name, age, gender, contact, id]
     );
 
@@ -31,7 +59,7 @@ exports.updatePatient = async (req, res) => {
 
     res.status(200).json(result.rows[0]);
   } catch (error) {
-    console.error('Error updating patient:', error.message);
+    console.error('Error updating patient:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };

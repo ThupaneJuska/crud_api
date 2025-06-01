@@ -16,6 +16,14 @@ app.use(express.json());
 app.use(cors(corsOptions));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// 🔒 Block ngrok inspection URLs (e.g. /_ngrok, /__ngrok)
+app.use((req, res, next) => {
+  if (req.url.startsWith('/_ngrok') || req.url.startsWith('/__ngrok')) {
+    return res.status(403).send('Access to ngrok inspection is disabled');
+  }
+  next();
+});
+
 // Optional: suppress ngrok browser warning header
 app.use((req, res, next) => {
   res.setHeader('ngrok-skip-browser-warning', 'true');
