@@ -1,4 +1,4 @@
-const allowedOrigins = ['http://localhost:4200','http://localhost:63274','https://950d-41-122-208-13.ngrok-free.app'];
+const allowedOrigins = ['http://localhost:4200','http://localhost:63621','https://950d-41-122-208-13.ngrok-free.app'];
 
 const corsOptions = {
   origin: (origin, callback) => {
