@@ -7,16 +7,24 @@ const patientRoutes = require('./routes/patientRoutes');
 const staffRoutes = require('./routes/staffRoutes');
 require('dotenv').config();
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Ensure upload folder exists
+const uploadMedicationsDir = path.join(__dirname, 'uploads/medications');
+if (!fs.existsSync(uploadMedicationsDir)) {
+  fs.mkdirSync(uploadMedicationsDir, { recursive: true });
+  console.log('✅ Created uploads/medications directory.');
+}
 
 // Middleware
 app.use(express.json());
 app.use(cors(corsOptions));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// 🔒 Block ngrok inspection URLs (e.g. /_ngrok, /__ngrok)
+// 🔒 Block ngrok inspection URLs (optional)
 app.use((req, res, next) => {
   if (req.url.startsWith('/_ngrok') || req.url.startsWith('/__ngrok')) {
     return res.status(403).send('Access to ngrok inspection is disabled');
@@ -30,7 +38,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Root route — welcome message
+// Root route
 app.get('/', (req, res) => {
   console.log('Root (/) route accessed');
   res.send('Welcome to my backend');
@@ -42,12 +50,11 @@ app.use('/api/prescriptions', prescriptionRoutes);
 app.use('/api/patients', patientRoutes);
 app.use('/api/staff', staffRoutes);
 
-// Catch-all for undefined routes (optional)
+// Fallback route
 app.use((req, res) => {
   res.status(404).send('Route not found');
 });
 
-// Start server
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}...`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
