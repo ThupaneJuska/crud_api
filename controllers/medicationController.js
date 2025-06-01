@@ -23,26 +23,19 @@ const upload = multer({ storage: storage });
 
 // MedicationController
 const MedicationController = {
-  addMedication: async (req, res) => {
-    try {
-      // Handle image upload
-      upload.single('image')(req, res, async (err) => {
-        if (err) {
-          return res.status(400).json({ message: 'Error uploading image', error: err });
-        }
+ addMedication: async (req, res) => {
+  try {
+    const imageUrl = req.file ? `/uploads/medications/${req.file.filename}` : null;
+    const medicationData = { ...req.body, image_url: imageUrl };
 
-        // Add image URL to the request body (if image is uploaded)
-        const imageUrl = req.file ? `/uploads/medications/${req.file.filename}` : null;
-        const medicationData = { ...req.body, image_url: imageUrl };
-
-        const medication = await MedicationModel.addMedication(medicationData);
-        res.status(201).json({ message: 'Medication added successfully', medication });
-      });
-    } catch (err) {
-      console.error('Error inserting medication:', err);
-      res.status(500).json({ message: 'Internal server error' });
-    }
-  },
+    const medication = await MedicationModel.addMedication(medicationData);
+    res.status(201).json({ message: 'Medication added successfully', medication });
+  } catch (err) {
+    console.error('Error inserting medication:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+}
+,
 
   getMedications: async (req, res) => {
     console.log('Fetching all medications...');
