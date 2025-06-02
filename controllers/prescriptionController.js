@@ -39,7 +39,7 @@ exports.addPrescription = async (req, res) => {
 
   try {
     // Step 1: Check current stock of the medication
-    const medResult = await db.query('SELECT name, stock_count FROM Medications WHERE id = $1', [medication_id]);
+    const medResult = await db.query('SELECT name, stock_count FROM Medication WHERE id = $1', [medication_id]);
     if (medResult.rows.length === 0) {
       return res.status(404).json({ error: 'Medication not found' });
     }
@@ -54,7 +54,7 @@ exports.addPrescription = async (req, res) => {
 
     // Step 3: Check if stock is low and send email to staff
     if (stock_count <= 10) {
-      const staffResult = await db.query('SELECT email, name FROM Staff WHERE id = $1', [staff_id]);
+      const staffResult = await db.query('SELECT email, name FROM staff WHERE id = $1', [staff_id]);
       if (staffResult.rows.length > 0) {
         const { email, name } = staffResult.rows[0];
 
