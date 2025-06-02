@@ -31,51 +31,52 @@ exports.getPrescriptionById = async (req, res) => {
 
 // Add a prescription
 exports.addPrescription = async (req, res) => {
+  console.log('Adding prescription...');
   const { prescription_date, dosage_instructions, patient_id, medication_id, staff_id } = req.body;
 
-  if (!prescription_date || !dosage_instructions || !patient_id || !medication_id || !staff_id) {
-    return res.status(400).json({ error: 'Missing required fields' });
-  }
-
   try {
-    // Step 1: Check current stock of the medication
-    const medResult = await db.query('SELECT name, stock_count FROM Medication WHERE medication_id = $1', [medication_id]);
-    if (medResult.rows.length === 0) {
+    // Step 1: Get current stock of the medication
+    const medRes = await db.query('SELECT name, stock_count FROM Medication WHERE medication_id = $1', [medication_id]);
+    if (medRes.rows.length === 0) {
       return res.status(404).json({ error: 'Medication not found' });
     }
 
-    const { name: medicationName, stock_count } = medResult.rows[0];
+    const { name: medicationName, stock_count } = medRes.rows[0];
 
-    // Step 2: Insert the prescription
-    const result = await db.query(
-      'INSERT INTO Prescription (prescription_date, dosage_instructions, patient_id, medication_id, staff_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [prescription_date, dosage_instructions, patient_id, medication_id, staff_id]
-    );
+    // Step 2: Call stored procedure to add the prescription
+    await db.query('CALL add_prescription($1, $2, $3, $4, $5)', [
+      prescription_date,
+      dosage_instructions,
+      patient_id,
+      medication_id,
+      staff_id
+    ]);
 
-    // Step 3: Check if stock is low and send email to staff
+    // Step 3: If stock is low (≤ 10), send an email to the staff
     if (stock_count <= 10) {
-      const staffResult = await db.query('SELECT email, name FROM staff WHERE id = $1', [staff_id]);
-      if (staffResult.rows.length > 0) {
-        const { email, name } = staffResult.rows[0];
+      const staffRes = await db.query('SELECT email, name FROM Staff WHERE staff_id = $1', [staff_id]);
+      if (staffRes.rows.length > 0) {
+        const { email, name } = staffRes.rows[0];
 
         const mailOptions = {
           from: process.env.EMAIL_USER,
           to: email,
-          subject: 'Low Stock Alert',
-          text: `Hi ${name},\n\nThe stock for medication "${medicationName}" is low (current count: ${stock_count}). Please consider restocking.\n\nRegards,\nSystem`
+          subject: '⚠️ Low Stock Alert',
+          text: `Hi ${name},\n\nPlease note: The stock for medication "${medicationName}" is low (stock count: ${stock_count}).\n\nRegards,\nInventory Management System`
         };
 
         await transporter.sendMail(mailOptions);
+        console.log('Low stock email sent to', email);
       }
     }
 
-    res.status(201).json({ message: 'Prescription added successfully', prescription: result.rows[0] });
-  } catch (error) {
-    console.error('Error adding prescription:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(201).json({ message: 'Prescription added successfully' });
+
+  } catch (err) {
+    console.error('Error adding prescription:', err);
+    res.status(500).json({ error: err.message });
   }
 };
-
 
 // Fetch all patients
 exports.getAllPatients = async (req, res) => {
