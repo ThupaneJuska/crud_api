@@ -5,6 +5,7 @@ const medicationRoutes = require('./routes/medicationRoutes');
 const prescriptionRoutes = require('./routes/prescriptionRoutes');
 const patientRoutes = require('./routes/patientRoutes'); 
 const staffRoutes = require('./routes/staffRoutes');
+const emailRoutes = require('./routes/emailRoutes');
 require('dotenv').config();
 const path = require('path');
 const fs = require('fs');
@@ -49,6 +50,7 @@ app.use('/api/medications', medicationRoutes);
 app.use('/api/prescriptions', prescriptionRoutes);
 app.use('/api/patients', patientRoutes);
 app.use('/api/staff', staffRoutes);
+app.use('/api/email', emailRoutes);
 
 // Fallback route
 app.use((req, res) => {

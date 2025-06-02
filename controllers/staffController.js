@@ -1,4 +1,14 @@
 const db = require('../config/db');
+const nodemailer = require('nodemailer');
+
+// Email setup
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER, // your Gmail address
+    pass: process.env.EMAIL_PASS  // your App Password
+  }
+});
 // const bcrypt = require('bcryptjs');
 
 // Fetch all staff members
@@ -53,12 +63,23 @@ exports.addStaff = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Insert staff into DB
     const result = await db.query(
       'INSERT INTO Staff (name, role, contact_number, email, password) VALUES ($1, $2, $3, $4, $5) RETURNING *',
       [name, role, contact_number, email, hashedPassword]
     );
 
-    res.status(201).json({ message: 'Staff member added successfully', staff: result.rows[0] });
+    // Send welcome email with credentials
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Welcome to Our System',
+      text: `Hi ${name},\n\nWelcome to the system. Here are your credentials:\n\nEmail: ${email}\nPassword: ${password}\n\nPlease keep them safe.\n\nRegards,\nAdmin Team`
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.status(201).json({ message: 'Staff member added and email sent successfully', staff: result.rows[0] });
 
   } catch (error) {
     console.error('Error adding staff:', error);
