@@ -73,7 +73,7 @@ exports.addStaff = async (req, res) => {
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
-      subject: 'Welcome to Our System',
+      subject: 'Welcome to Medication System',
       text: `Hi ${name},\n\nWelcome to the system. Here are your credentials:\n\nEmail: ${email}\nPassword: ${password}\n\nPlease keep them safe.\n\nRegards,\nAdmin Team`
     };
 
