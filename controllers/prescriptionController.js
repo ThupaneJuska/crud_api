@@ -48,7 +48,7 @@ exports.addPrescription = async (req, res) => {
 
     // Step 2: Insert the prescription
     const result = await db.query(
-      'INSERT INTO Prescriptions (prescription_date, dosage_instructions, patient_id, medication_id, staff_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      'INSERT INTO Prescription (prescription_date, dosage_instructions, patient_id, medication_id, staff_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
       [prescription_date, dosage_instructions, patient_id, medication_id, staff_id]
     );
 
