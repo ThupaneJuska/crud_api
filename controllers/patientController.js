@@ -13,26 +13,28 @@ exports.getAllPatients = async (req, res) => {
 
 // Add a new patient
 exports.addPatient = async (req, res) => {
-  const { name, age, gender, contact } = req.body;
+  const { name, age, gender, contact, sickness } = req.body;
 
-  if (!name || !age || !gender || !contact) {
-    return res.status(400).json({ error: 'All fields are required' });
+  // Basic validation
+  if (!name || !age || !gender || !contact || !sickness) {
+    return res.status(400).json({ error: 'All fields are required, including sickness' });
   }
 
   try {
     const result = await db.query(
-      `INSERT INTO Patient (name, age, gender, contact)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO Patient (name, age, gender, contact, sickness)
+       VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
-      [name, age, gender, contact]
+      [name, age, gender, contact, sickness]
     );
 
     res.status(201).json(result.rows[0]);
   } catch (error) {
-    console.error('🔥 Error adding patient:', error); // Show detailed DB error
-    res.status(500).json({ error: error.message }); // Respond with actual message
+    console.error('🔥 Error adding patient:', error);
+    res.status(500).json({ error: error.message });
   }
 };
+
 
 // Update a patient
 exports.updatePatient = async (req, res) => {
