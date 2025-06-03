@@ -1,3 +1,5 @@
+require('dotenv').config(); // Load environment variables
+
 const db = require('../config/db');
 const nodemailer = require('nodemailer');
 
@@ -8,6 +10,7 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS,
   },
 });
+
 // Get all prescriptions
 exports.getAllPrescriptions = async (req, res) => {
   try {
@@ -32,6 +35,7 @@ exports.getPrescriptionById = async (req, res) => {
 // Add a prescription
 exports.addPrescription = async (req, res) => {
   console.log('Adding prescription...');
+
   const { prescription_date, dosage_instructions, patient_id, medication_id, staff_id } = req.body;
 
   try {
@@ -52,7 +56,7 @@ exports.addPrescription = async (req, res) => {
       staff_id
     ]);
 
-    // Step 3: If stock is low (≤ 10), send an email to the staff
+    // Step 3: If stock is low (≤ 10), send email
     if (stock_count <= 10) {
       const staffRes = await db.query('SELECT email, name FROM Staff WHERE staff_id = $1', [staff_id]);
       if (staffRes.rows.length > 0) {
@@ -65,49 +69,52 @@ exports.addPrescription = async (req, res) => {
           text: `Hi ${name},\n\nPlease note: The stock for medication "${medicationName}" is low (stock count: ${stock_count}).\n\nRegards,\nInventory Management System`
         };
 
-        await transporter.sendMail(mailOptions);
-        console.log('Low stock email sent to', email);
+        try {
+          await transporter.sendMail(mailOptions);
+          console.log('Low stock email sent to', email);
+        } catch (emailErr) {
+          console.error('❌ Failed to send email:', emailErr);
+        }
       }
     }
 
     res.status(201).json({ message: 'Prescription added successfully' });
 
   } catch (err) {
-    console.error('Error adding prescription:', err);
+    console.error('❌ Error adding prescription:', err);
     res.status(500).json({ error: err.message });
   }
 };
 
 // Fetch all patients
 exports.getAllPatients = async (req, res) => {
-    try {
-      const result = await db.query('SELECT patient_id, name FROM Patient');
-      res.json(result.rows);
-    } catch (error) {
-      console.error('Error fetching patients:', error);
-      res.status(500).json({ error: 'Internal Server Error' });
-    }
-  };
-  
-  // Fetch all medications
-  exports.getAllMedications = async (req, res) => {
-    try {
-      const result = await db.query('SELECT medication_id, name FROM Medication');
-      res.json(result.rows);
-    } catch (error) {
-      console.error('Error fetching medications:', error);
-      res.status(500).json({ error: 'Internal Server Error' });
-    }
-  };
-  
-  // Fetch all staff
-  exports.getAllStaff = async (req, res) => {
-    try {
-      const result = await db.query('SELECT staff_id, name FROM Staff');
-      res.json(result.rows);
-    } catch (error) {
-      console.error('Error fetching staff:', error);
-      res.status(500).json({ error: 'Internal Server Error' });
-    }
-  };
+  try {
+    const result = await db.query('SELECT patient_id, name FROM Patient');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching patients:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
 
+// Fetch all medications
+exports.getAllMedications = async (req, res) => {
+  try {
+    const result = await db.query('SELECT medication_id, name FROM Medication');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching medications:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+// Fetch all staff
+exports.getAllStaff = async (req, res) => {
+  try {
+    const result = await db.query('SELECT staff_id, name FROM Staff');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching staff:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
