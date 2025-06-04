@@ -39,15 +39,15 @@ exports.addPatient = async (req, res) => {
 // Update a patient
 exports.updatePatient = async (req, res) => {
   const { id } = req.params;
-  const { name, age, gender, contact } = req.body;
+  const { name, age, gender, contact, sickness } = req.body;
 
   try {
     const result = await db.query(
       `UPDATE Patient 
-       SET name = $1, age = $2, gender = $3, contact = $4 
+       SET name = $1, age = $2, gender = $3, contact = $4, sickness = $5
        WHERE patient_id = $5 
        RETURNING *`,
-      [name, age, gender, contact, id]
+      [name, age, gender, contact,sickness, id]
     );
 
     if (result.rowCount === 0) {
