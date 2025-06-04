@@ -45,7 +45,7 @@ exports.updatePatient = async (req, res) => {
     const result = await db.query(
       `UPDATE Patient 
        SET name = $1, age = $2, gender = $3, contact = $4, sickness = $5
-       WHERE patient_id = $5 
+       WHERE patient_id = $6
        RETURNING *`,
       [name, age, gender, contact,sickness, id]
     );
