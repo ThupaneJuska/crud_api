@@ -16,7 +16,7 @@ exports.addPatient = async (req, res) => {
   const { name, age, gender, contact, sickness } = req.body;
 
   // Basic validation
-  if (!name || !age || !gender || !contact || !sickness) {
+  if (!name || !age || !gender || !contact ) {
     return res.status(400).json({ error: 'All fields are required, including sickness' });
   }
 
