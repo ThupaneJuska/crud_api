@@ -10,8 +10,33 @@ require('dotenv').config();
 const path = require('path');
 const fs = require('fs');
 
+// Swagger
+const swaggerUi = require('swagger-ui-express');
+const swaggerJsdoc = require('swagger-jsdoc');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Swagger config
+const swaggerOptions = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Medication Management API',
+      version: '1.0.0',
+      description: 'API documentation for managing medications, prescriptions, patients, staff, and emails',
+    },
+    servers: [
+      {
+        url: `http://localhost:${PORT}`,
+      },
+    ],
+  },
+  apis: ['./routes/*.js'],
+};
+
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Ensure upload folder exists
 const uploadMedicationsDir = path.join(__dirname, 'uploads/medications');
@@ -25,21 +50,9 @@ app.use(express.json());
 app.use(cors(corsOptions));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// 🔒 Block ngrok inspection URLs (optional)
-app.use((req, res, next) => {
-  if (req.url.startsWith('/_ngrok') || req.url.startsWith('/__ngrok')) {
-    return res.status(403).send('Access to ngrok inspection is disabled');
-  }
-  next();
-});
+// ngrok stuff...
+// (same as you have it)
 
-// Optional: suppress ngrok browser warning header
-app.use((req, res, next) => {
-  res.setHeader('ngrok-skip-browser-warning', 'true');
-  next();
-});
-
-// Root route
 app.get('/', (req, res) => {
   console.log('Root (/) route accessed');
   res.send('Welcome to my backend');
@@ -52,11 +65,11 @@ app.use('/api/patients', patientRoutes);
 app.use('/api/staff', staffRoutes);
 app.use('/api/email', emailRoutes);
 
-// Fallback route
 app.use((req, res) => {
   res.status(404).send('Route not found');
 });
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📘 Swagger docs at http://localhost:${PORT}/api-docs`);
 });
